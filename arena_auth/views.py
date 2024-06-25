@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, LogoutSerializer
 
 
 User = get_user_model()
@@ -17,22 +17,16 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
 
 
-class CustomUserRegisterView(APIView):
-    def put(self, request, *args, **kwargs):
-        serializer = CustomUserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Registrazione avvenuta con successo."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LogoutAndBlacklistRefreshTokenForUserView(generics.GenericAPIView):
-    permission_classes = (permissions.AllowAny,)
-    authentication_classes = ()
+class LogoutAndBlacklistRefreshTokenForUserView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = LogoutSerializer
 
     def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        refresh_token = serializer.validated_data['refresh_token']
         try:
-            refresh_token = request.data["refresh_token"]
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)

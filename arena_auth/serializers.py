@@ -75,3 +75,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
