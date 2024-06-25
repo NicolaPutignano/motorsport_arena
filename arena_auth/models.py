@@ -37,8 +37,6 @@ class UserAttr(models.Model):
 
 
 class CustomUser(AbstractUser):
-    user_attr = models.OneToOneField(UserAttr, on_delete=models.CASCADE, null=True, blank=True,
-                                     related_name='custom_user')
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='customuser_set',
@@ -57,14 +55,3 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-@receiver(post_save, sender=CustomUser)
-def create_user_attr(sender, instance, created, **kwargs):
-    if created:
-        UserAttr.objects.create(user=instance)
-
-
-@receiver(post_save, sender=CustomUser)
-def save_user_attr(sender, instance, **kwargs):
-    instance.userattr.save()

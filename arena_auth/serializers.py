@@ -10,12 +10,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
     email = serializers.CharField(write_only=True, required=True)
+    xbox_id = serializers.CharField(write_only=True, required=True)
     accept_privacy_policy = serializers.BooleanField(write_only=True, required=True)
     accept_terms_and_conditions = serializers.BooleanField(write_only=True, required=True)
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'password', 'password2', 'email', 'accept_privacy_policy', 'accept_terms_and_conditions')
+        fields = ('username', 'password', 'password2', 'email', 'xbox_id', 'accept_privacy_policy',
+                  'accept_terms_and_conditions')
 
     def validate_password(self, value):
         # Password should be at least 8 characters long
@@ -57,6 +59,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Le password non corrispondono."})
         if not attrs['email']:
             raise serializers.ValidationError({"email": "Devi inserire un email"})
+        if not attrs['xbox_id']:
+            raise serializers.ValidationError({"xbox_id": "Devi inserire un xbox id"})
         if not attrs['accept_privacy_policy']:
             raise serializers.ValidationError({"accept_privacy_policy": "Devi accettare le politiche sulla privacy."})
         if not attrs['accept_terms_and_conditions']:
@@ -67,12 +71,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         validated_data.pop('accept_terms_and_conditions')
         validated_data.pop('accept_privacy_policy')
+        xbox_id = validated_data.pop('xbox_id')
         user = CustomUser.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
         )
         user.set_password(validated_data['password'])
         user.save()
+
+        UserAttr.objects.create(user=user, xbox_id=xbox_id)
 
         return user
 
