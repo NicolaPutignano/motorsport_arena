@@ -41,10 +41,11 @@ INSTALLED_APPS = [
     'django_otp',
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
-    'arena_auth',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'arena_auth',
+    'arena_network',
 ]
 
 MIDDLEWARE = [
