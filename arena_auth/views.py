@@ -2,9 +2,10 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework import status
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth import get_user_model, authenticate
+from django.core.mail import send_mail
 from .serializers import CustomUserSerializer, LogoutSerializer
 
 
@@ -77,3 +78,25 @@ class Verify2FAView(APIView):
         if device and device.verify_token(token):
             return Response({'status': '2FA verified'})
         return Response({'status': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteAccountView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        email = user.email
+        username = user.username
+        user.delete()
+
+        # Invia un'email di conferma
+        send_mail(
+            'Conferma di Cancellazione dell\'Account',
+            f'Ciao {username},\n\nIl tuo account è stato cancellato con successo.',
+            'm.tucci1992@gmail.com',
+            [email],
+            fail_silently=False,
+        )
+
+        return Response({"detail": "Account cancellato con successo. Una email di conferma è stata inviata."},
+                        status=status.HTTP_200_OK)
