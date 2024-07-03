@@ -63,3 +63,57 @@ class JoinCommunityView(APIView):
         CommunityMember.objects.create(user=user, community=community, role='Member')
 
         return Response({"success": "You have successfully joined the community."}, status=status.HTTP_201_CREATED)
+
+
+class LeaveCommunityView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        community_id = kwargs.get('pk')
+        try:
+            community = Community.objects.get(pk=community_id)
+        except Community.DoesNotExist:
+            return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+
+        try:
+            community_member = CommunityMember.objects.get(user=user, community=community)
+        except CommunityMember.DoesNotExist:
+            return Response({"error": "You are not a member of this community."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        community_member.delete()
+        return Response({"success": "You have successfully left the community."}, status=status.HTTP_200_OK)
+
+
+class RemoveMemberView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        community_id = kwargs.get('community_pk')
+        member_id = kwargs.get('member_pk')
+
+        try:
+            community = Community.objects.get(pk=community_id)
+        except Community.DoesNotExist:
+            return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+
+        # Verifica se l'utente richiedente è un Admin
+        try:
+            admin_member = CommunityMember.objects.get(user=user, community=community, role='Admin')
+        except CommunityMember.DoesNotExist:
+            return Response({"error": "You do not have permission to remove members from this community."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # Verifica se il membro da rimuovere esiste nella community
+        try:
+            member_to_remove = CommunityMember.objects.get(user_id=member_id, community=community)
+        except CommunityMember.DoesNotExist:
+            return Response({"error": "Member not found in this community."}, status=status.HTTP_404_NOT_FOUND)
+
+        member_to_remove.delete()
+        return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
+
