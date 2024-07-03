@@ -3,6 +3,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+
+from arena_network.constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
+from arena_network.utils import contains_prohibited_words
 from .models import CustomUser, UserAttr
 
 
@@ -38,20 +41,24 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_email(self, value):
-        # Check if email format is valid
         try:
             validate_email(value)
         except ValidationError:
             raise serializers.ValidationError("Formato email non valido.")
-        # Check if email is unique
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("Indirizzo email già presente nel database.")
         return value
 
     def validate_username(self, value):
-        # Check if username is unique
         if CustomUser.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username già presente nel database.")
+        if contains_prohibited_words(value, PROHIBITED_WORDS_EN) or contains_prohibited_words(value, PROHIBITED_WORDS_IT):
+            raise serializers.ValidationError("Lo Username contiene parole proibite.")
+        return value
+
+    def validate_xbox_id(self, value):
+        if UserAttr.objects.filter(xbox_id=value).exists():
+            raise serializers.ValidationError("ID Xbox già presente nel database.")
         return value
 
     def validate(self, attrs):
