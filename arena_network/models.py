@@ -30,7 +30,7 @@ class CommunityMember(models.Model):
 
     def __str__(self):
         return f'{self.user.username} in {self.community.name} as {self.role}'
-    
+
 class Event(models.Model):
     name_event = models.CharField(max_length=255)
     type = models.CharField(max_length=100)
@@ -77,16 +77,16 @@ class Circuit(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class RaceCircuit(models.Model):
     id_event = models.ForeignKey(Event, on_delete=models.CASCADE)
     id_circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
     order = models.IntegerField()
     division = models.CharField(max_length=255)
-    
+
     def __str__(self):
         return f"RaceCircuit {self.pk}: Event {self.id_event.name_event}, Circuit {self.id_circuit.name}, Order {self.order}, Division {self.division}"
-    
+
 class RaceCar(models.Model):
     id_event = models.ForeignKey(Event, on_delete=models.CASCADE)
     id_car = models.ForeignKey(Car, on_delete=models.CASCADE)
@@ -95,7 +95,7 @@ class RaceCar(models.Model):
 
     def __str__(self):
         return f"RaceCar {self.pk}: Event {self.id_event.name_event}, Car {self.id_car.model}, Indice Prestazione {self.performance_index}, Division {self.division}"
-    
+
 class EventUser(models.Model):
     id_event = models.ForeignKey(Event, on_delete=models.CASCADE)
     id_user = models.ForeignKey(User, on_delete=models.CASCADE)
