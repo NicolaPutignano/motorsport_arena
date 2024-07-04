@@ -51,7 +51,7 @@ class Car(models.Model):
     weight_lb = models.IntegerField()
     torque_Nm = models.IntegerField()
     torque_ftlb = models.IntegerField()
-    traction = status = models.CharField(max_length=3, choices=CAR_TRACTION)
+    traction = models.CharField(max_length=3, choices=CAR_TRACTION)
     engine_position = models.CharField(max_length=3, choices=CAR_ENGINE_POS)
     dlc = models.BooleanField()
 

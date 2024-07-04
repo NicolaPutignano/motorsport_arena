@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'arena_auth',
     'arena_network',
+    'arena_events',
 ]
 
 MIDDLEWARE = [
