@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('arena_auth.urls')),
     path('network/', include('arena_network.urls')),
+    path('events/', include('arena_events.urls')),
 ]

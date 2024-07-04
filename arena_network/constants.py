@@ -98,5 +98,3 @@ PROHIBITED_WORDS_IT = [
     'masturbare', 'vagina', 'testicoli', 'pene', 'fighe', 'culo', 'merda', 'vaffanculo', 'testicoli', 'vagina',
     'lesbica', 'pene', 'porno', 'fighe', 'stronzo', 'merda', 'vaffanculo', 'testicoli', 'pene', 'vagina'
 ]
-
-EVENT_DOC_DIR = ['event_documents/']
