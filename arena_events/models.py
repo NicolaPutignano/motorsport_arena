@@ -3,7 +3,7 @@ from django.conf import settings
 
 from arena_auth.models import Nationality
 from arena_events.constants import EVENT_TYPES, STATUS_CHOICES, RACE_TIME_PROGRESS, RACE_PENALTY, EVENT_DOC_DIR, \
-    CAR_TRACTION, CAR_ENGINE_POS
+    CAR_TRACTION, CAR_ENGINE_POS, CAR_WHEEL_TYPE, CAR_STEER_POS, CFG, IND
 
 
 class Event(models.Model):
@@ -53,6 +53,14 @@ class Car(models.Model):
     torque_ftlb = models.IntegerField()
     traction = models.CharField(max_length=3, choices=CAR_TRACTION)
     engine_position = models.CharField(max_length=3, choices=CAR_ENGINE_POS)
+    Dsp = models.FloatField()
+    cfg = models.CharField(max_length=3, choices=CFG)
+    cylinders = models.IntegerField()
+    ind = models.CharField(max_length=3, choices=IND)
+    wheel_type = models.CharField(max_length=3, choices=CAR_WHEEL_TYPE)
+    doors = models.IntegerField()
+    topless = models.BooleanField()
+    steering_position = models.CharField(max_length=1, choices=CAR_STEER_POS)
     dlc = models.BooleanField()
 
     def __str__(self):
