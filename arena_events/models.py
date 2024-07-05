@@ -82,6 +82,9 @@ class Race(models.Model):
     penalty = models.CharField(max_length=20, choices=RACE_PENALTY)
     disqualified = models.BooleanField(default=False)
     box_stop = models.IntegerField()
+    multiclass = models.BooleanField(default=False)
+    multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
+    multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
     circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
     cars = models.ManyToManyField(Car, through='RaceCar')
 
@@ -94,3 +97,4 @@ class RaceCar(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
     performance_index = models.IntegerField()
     division = models.CharField(max_length=255)
+    multiclass_group_name = models.CharField(max_length=255, blank=True, null=True)
