@@ -61,7 +61,7 @@ class Car(models.Model):
     doors = models.IntegerField()
     topless = models.BooleanField()
     steering_position = models.CharField(max_length=10, choices=CAR_STEER_POS)
-    dlc = models.BooleanField()
+    dlc = models.CharField(max_length=255)
 
     def __str__(self):
         return self.model
