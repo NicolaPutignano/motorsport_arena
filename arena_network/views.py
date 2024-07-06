@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from arena_auth.models import CustomUser
 from .models import Community, CommunityMember
 from .serializers import CommunitySerializer
 
@@ -46,9 +47,9 @@ class JoinCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        community_id = kwargs.get('pk')
+        community_name = kwargs.get('community_name')
         try:
-            community = Community.objects.get(pk=community_id)
+            community = Community.objects.get(name=community_name)
         except Community.DoesNotExist:
             return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -69,9 +70,9 @@ class LeaveCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        community_id = kwargs.get('pk')
+        community_name = kwargs.get('community_name')
         try:
-            community = Community.objects.get(pk=community_id)
+            community = Community.objects.get(name=community_name)
         except Community.DoesNotExist:
             return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -91,13 +92,18 @@ class RemoveMemberView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        community_id = kwargs.get('community_pk')
-        member_id = kwargs.get('member_pk')
+        community_name = kwargs.get('community_name')
+        username = kwargs.get('username')
 
         try:
-            community = Community.objects.get(pk=community_id)
+            community = Community.objects.get(name=community_name)
         except Community.DoesNotExist:
             return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            member_to_remove = CustomUser.objects.get(username=username)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
 
@@ -110,10 +116,10 @@ class RemoveMemberView(APIView):
 
         # Verifica se il membro da rimuovere esiste nella community
         try:
-            member_to_remove = CommunityMember.objects.get(user_id=member_id, community=community)
+            community_member = CommunityMember.objects.get(user=member_to_remove, community=community)
         except CommunityMember.DoesNotExist:
             return Response({"error": "Member not found in this community."}, status=status.HTTP_404_NOT_FOUND)
 
-        member_to_remove.delete()
+        community_member.delete()
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
 
