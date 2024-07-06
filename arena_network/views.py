@@ -55,10 +55,16 @@ class JoinCommunityView(APIView):
 
         user = request.user
 
-        # Controlla se l'utente è già un membro della community
-        if CommunityMember.objects.filter(user=user, community=community).exists():
-            return Response({"error": "You are already a member of this community."},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # Controlla se l'utente è già un membro della community o è stato bannato in precedenza
+        try:
+            community_member = CommunityMember.objects.get(user=user, community=community)
+            if community_member.role == 'Banned':
+                return Response({"error": "You are banned from this community."}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({"error": "You are already a member of this community."},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except CommunityMember.DoesNotExist:
+            pass
 
         # Aggiungi l'utente come membro della community
         CommunityMember.objects.create(user=user, community=community, role='Member')
@@ -120,6 +126,8 @@ class RemoveMemberView(APIView):
         except CommunityMember.DoesNotExist:
             return Response({"error": "Member not found in this community."}, status=status.HTTP_404_NOT_FOUND)
 
-        community_member.delete()
+        community_member.role = 'Banned'
+        community_member.save()
+
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
 
