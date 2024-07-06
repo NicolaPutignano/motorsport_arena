@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from arena_network.constants import ROLE_CHOICES
+
 
 class Community(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -15,12 +17,6 @@ class Community(models.Model):
 
 
 class CommunityMember(models.Model):
-    ROLE_CHOICES = [
-        ('Admin', 'Admin'),
-        ('Staff', 'Staff'),
-        ('Member', 'Member'),
-    ]
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='members')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)

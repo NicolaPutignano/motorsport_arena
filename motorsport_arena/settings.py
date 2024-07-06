@@ -83,6 +83,10 @@ CORS_ALLOWED_ORIGINS = [
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_ACCESS': 'access_token',
+    'AUTH_COOKIE_SECURE': True,
+    'AUTH_COOKIE_SAMESITE': 'Lax',
     'ROTATE_REFRESH_TOKENS': False,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
