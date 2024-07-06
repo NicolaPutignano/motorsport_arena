@@ -7,11 +7,11 @@ class Command(BaseCommand):
     help = 'Import cars from an Excel file'
 
     def handle(self, *args, **kwargs):
-        file_path = 'data/modelexport.xlsx'
+        file_path = 'data/cars_model_import.xlsx'
         data = pd.read_excel(file_path)
 
         for index, row in data.iterrows():
-            nationality, created = Nationality.objects.get_or_create(name=row['country'])
+            nationality = Nationality.objects.get(pk=row['country'])
             Car.objects.create(
                 forza_id=row['forza_id'],
                 year=row['year'],
