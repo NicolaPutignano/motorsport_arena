@@ -6,6 +6,7 @@ from rest_framework import status
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
+from django.conf import settings
 from .serializers import CustomUserSerializer, LogoutSerializer
 
 
@@ -30,10 +31,25 @@ class CustomTokenObtainPairView(APIView):
         if user is not None:
             if user.is_active:
                 refresh = RefreshToken.for_user(user)
-                return Response({
+                response = Response({
                     'refresh': str(refresh),
                     'access': str(refresh.access_token),
                 })
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
+                    value=str(refresh),
+                    httponly=True,
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                )
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT['AUTH_COOKIE_ACCESS'],
+                    value=str(refresh.access_token),
+                    httponly=True,
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                )
+                return response
             else:
                 return Response({"detail": "User account is disabled."}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -52,7 +68,10 @@ class LogoutAndBlacklistRefreshTokenForUserView(APIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            response = Response(status=status.HTTP_205_RESET_CONTENT)
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_ACCESS'])
+            return response
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
