@@ -10,18 +10,18 @@ class RaceCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RaceCar
-        fields = ['car_id', 'performance_index', 'division', 'multiclass_group_name']
+        fields = ['car_id', 'performance_index', 'classification', 'multiclass_group_name']
 
     def create(self, validated_data):
         race = validated_data.get('race')
         car_id = validated_data.get('car_id')
         performance_index = validated_data.get('performance_index')
-        division = validated_data.get('division')
+        classification = validated_data.get('classification')
         multiclass_group_name = validated_data.get('multiclass_group_name')
 
         car = Car.objects.get(id=car_id)
-        return RaceCar.objects.create(race=race, car=car, performance_index=performance_index, division=division,
-                                      multiclass_group_name=multiclass_group_name)
+        return RaceCar.objects.create(race=race, car=car, performance_index=performance_index,
+                                      classification=classification, multiclass_group_name=multiclass_group_name)
 
 
 class RaceSerializer(serializers.ModelSerializer):

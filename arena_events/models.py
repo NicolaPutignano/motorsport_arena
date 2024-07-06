@@ -96,5 +96,5 @@ class RaceCar(models.Model):
     race = models.ForeignKey(Race, on_delete=models.CASCADE)
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
     performance_index = models.IntegerField()
-    division = models.CharField(max_length=255)
+    classification = models.CharField(max_length=255)
     multiclass_group_name = models.CharField(max_length=255, blank=True, null=True)
