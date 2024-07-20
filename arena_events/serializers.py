@@ -44,7 +44,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = ['name', 'event_type', 'public', 'ranked', 'document', 'races']
 
     def validate_name(self, value):
         if Event.objects.filter(name=value).exists():
@@ -56,7 +56,11 @@ class EventSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         races_data = validated_data.pop('races')
-        event = Event.objects.create(**validated_data)
+        request = self.context.get('request', None)
+        user = None
+        if request and hasattr(request, "user"):
+            user = request.user
+        event = Event.objects.create(created_by=user, status='Scheduled', **validated_data)
         for race_data in races_data:
             cars_data = race_data.pop('cars')
             race = Race.objects.create(event=event, **race_data)

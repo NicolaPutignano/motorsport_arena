@@ -16,6 +16,24 @@ RACE_TIME_PROGRESS = [
     ('Fixed', 'Fixed')
 ]
 
+RACE_LENGTH_TYPE = [
+    ('Laps', 'Laps'),
+    ('Minutes', 'Minutes')
+]
+
+RACE_WEATHER = [
+    ('Sunrise', 'Sunrise'),
+    ('Morning', 'Morning'),
+    ('Late morning', 'Late morning'),
+    ('Noon', 'Noon'),
+    ('Afternoon', 'Afternoon'),
+    ('Late afternoon', 'Late afternoon'),
+    ('Evening', 'Evening'),
+    ('Sunset', 'Sunset'),
+    ('Night', 'Night'),
+    ('Midnight', 'Midnight')
+]
+
 RACE_PENALTY = [
     ('No', 'No'),
     ('Limited', 'Limited'),
