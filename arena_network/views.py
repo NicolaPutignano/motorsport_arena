@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from arena_auth.authentication import CookieJWTAuthentication
 from arena_auth.models import CustomUser
 from .models import Community, CommunityMember
 from .serializers import CommunitySerializer
@@ -12,6 +13,7 @@ class CommunityCreateView(generics.CreateAPIView):
     queryset = Community.objects.all()
     serializer_class = CommunitySerializer
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def perform_create(self, serializer):
         community = serializer.save(created_by=self.request.user)
@@ -23,6 +25,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
     queryset = Community.objects.all()
     serializer_class = CommunitySerializer
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def delete(self, request, *args, **kwargs):
         community = self.get_object()
@@ -45,6 +48,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
 
 class JoinCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         community_name = kwargs.get('community_name')
@@ -74,6 +78,7 @@ class JoinCommunityView(APIView):
 
 class LeaveCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         community_name = kwargs.get('community_name')
@@ -96,6 +101,7 @@ class LeaveCommunityView(APIView):
 
 class RemoveMemberView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request, *args, **kwargs):
         community_name = kwargs.get('community_name')

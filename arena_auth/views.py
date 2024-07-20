@@ -7,6 +7,8 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.conf import settings
+
+from .authentication import CookieJWTAuthentication
 from .serializers import CustomUserSerializer, LogoutSerializer
 
 
@@ -58,6 +60,7 @@ class CustomTokenObtainPairView(APIView):
 
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
     def post(self, request):
@@ -69,8 +72,8 @@ class LogoutAndBlacklistRefreshTokenForUserView(APIView):
             token = RefreshToken(refresh_token)
             token.blacklist()
             response = Response(status=status.HTTP_205_RESET_CONTENT)
-            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
-            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_ACCESS'])
+            response.delete_cookie('refresh_token')
+            response.delete_cookie('access_token')
             return response
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
