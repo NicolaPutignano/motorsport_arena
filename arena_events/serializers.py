@@ -78,8 +78,7 @@ class EventSerializer(serializers.ModelSerializer):
                 if non_sequential_dates:
                     error_message += f" Le seguenti gare non sono in ordine progressivo: {[race['race_start'] for race in non_sequential_dates]}."
                 raise serializers.ValidationError(error_message)
-
-        return data    
+        return data
     
     def create(self, validated_data):
         races_data = validated_data.pop('races')
