@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 
 from arena_network.constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from arena_network.utils import contains_prohibited_words
@@ -32,6 +33,7 @@ class RaceSerializer(serializers.ModelSerializer):
             car = Car.objects.get(id=car_data['car_id'])
             RaceCar.objects.create(race=race, car=car, **car_data)
         return race
+    
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -59,6 +61,26 @@ class EventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only image files are allowed.")
         return value
 
+    def validate_date(self, data):
+        event_type = data.get('event_type')
+        races = data.get('races')
+        
+        if event_type in ['Championship', 'League']:
+            now = timezone.now()
+            race_dates = [(race['race_start'], race) for race in races]
+            invalid_dates = [race for date, race in race_dates if date <= now]
+            non_sequential_dates = [race for i, (date, race) in enumerate(sorted(race_dates)) if i > 0 and date <= sorted(race_dates)[i-1][0]]
+
+            if invalid_dates or non_sequential_dates:
+                error_message = "Errore nella validazione delle gare:"
+                if invalid_dates:
+                    error_message += f" Le seguenti gare hanno date non valide (passate): {[race['race_start'] for race in invalid_dates]}."
+                if non_sequential_dates:
+                    error_message += f" Le seguenti gare non sono in ordine progressivo: {[race['race_start'] for race in non_sequential_dates]}."
+                raise serializers.ValidationError(error_message)
+
+        return data    
+    
     def create(self, validated_data):
         races_data = validated_data.pop('races')
         request = self.context.get('request', None)
