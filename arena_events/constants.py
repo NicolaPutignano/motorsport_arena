@@ -21,7 +21,8 @@ RACE_LENGTH_TYPE = [
     ('Minutes', 'Minutes')
 ]
 
-RACE_WEATHER = [
+RACE_INITIAL_TIME = [
+    ('Personalized', 'Personalized'),
     ('Sunrise', 'Sunrise'),
     ('Morning', 'Morning'),
     ('Late morning', 'Late morning'),
@@ -32,6 +33,28 @@ RACE_WEATHER = [
     ('Sunset', 'Sunset'),
     ('Night', 'Night'),
     ('Midnight', 'Midnight')
+]
+
+RACE_WEATHER = [
+    ('Random', 'Random'),
+    ('Variable', 'Variable'),
+    ('Clear', 'Clear'),
+    ('Mostly clear', 'Mostly clear'),
+    ('Partly cloudy', 'Partly cloudy'),
+    ('Cloudy', 'Cloudy'),
+    ('Threatening clouds', 'Threatening clouds'),
+    ('Thundering clouds', 'Thundering clouds'),
+    ('Light mist', 'Light mist'),
+    ('Irregular fog', 'Irregular fog'),
+    ('Thick fog', 'Thick fog'),
+    ('Cloudy (dry)', 'Cloudy (dry)'),
+    ('Cloudy (wet)', 'Cloudy (wet)'),
+    ('Fine rain', 'Fine rain'),
+    ('Light rain', 'Light rain'),
+    ('Moderate rain', 'Moderate rain'),
+    ('Heavy rain', 'Heavy rain'),
+    ('Tempest', 'Tempest'),
+    ('Storm', 'Storm'),
 ]
 
 RACE_PENALTY = [
