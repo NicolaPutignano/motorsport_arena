@@ -1,4 +1,5 @@
 # Ignora i file collegati alle chiavi API
 .env
-venv/
-__pycache__/
+
+# Ignore all log files
+*.log
