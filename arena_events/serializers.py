@@ -21,11 +21,26 @@ class RaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Race
         fields = [
-            'length_type', 'length', 'initial_time_day', 'weather', 'race_start',
-            'qualification', 'time_progress', 'timescale', 'dynamic_tyre', 'tyre_wear',
+            'length_type', 'length', 'initial_time_day', 'start_time_game', 'weather', 'race_start',
+            'qualification', 'time_progress', 'timescale', 'dynamic_tyre', 'tyre_on_track', 'tyre_wear',
             'collision', 'dub_ghost', 'penalty', 'disqualified', 'box_stop', 'restrictions',
             'multiclass', 'circuit', 'cars'
         ]
+
+    def validate(self, data):
+        if data.get('multiclass'):
+            for car in data.get('cars', []):
+                if not car.get('multiclass_group_name'):
+                    raise serializers.ValidationError(
+                        "If multiclass is true, all cars must have a multiclass_group_name.")
+        if data.get('initial_time_day') == 'Personalized' and not data.get('start_time_game'):
+            raise serializers.ValidationError(
+                "If initial_time_day is 'Personalized', start_time_game must be provided.")
+        if data.get('time_progress') == 'Continuous' and not data.get('timescale'):
+            raise serializers.ValidationError("If time_progress is 'Continuous', timescale must be provided.")
+        if data.get('dynamic_tyre') and not data.get('tyre_on_track'):
+            raise serializers.ValidationError("If dynamic_tyre is true, tyre_on_track must be provided.")
+        return data
 
     def create(self, validated_data):
         cars_data = validated_data.pop('cars')
@@ -60,8 +75,14 @@ class EventSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        event_type = data.get('event_type')
         races = data.get('races')
         now = timezone.now()
+
+        if event_type == 'SingleRace' and len(races) != 1:
+            raise serializers.ValidationError("A SingleRace event must contain exactly one race.")
+        if event_type in ['Championship', 'League'] and len(races) <= 2:
+            raise serializers.ValidationError("A Championship or League event must contain more than two races.")
 
         invalid_dates = [race for race in races if race['race_start'] <= now]
 
@@ -70,7 +91,6 @@ class EventSerializer(serializers.ModelSerializer):
                 f"Hai indicato una data per l'inizio di una gara, antecedenti alla data odierna"
             )
 
-        event_type = data.get('event_type')
         if event_type in ['Championship', 'League']:
             race_dates = [(race['race_start'], race) for race in races]
             non_sequential_dates = [race for i, (date, race) in enumerate(race_dates) if
