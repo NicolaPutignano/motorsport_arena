@@ -99,7 +99,7 @@ PROHIBITED_WORDS_IT = [
     'lesbica', 'pene', 'porno', 'fighe', 'stronzo', 'merda', 'vaffanculo', 'testicoli', 'pene', 'vagina'
 ]
 
-ROLE_CHOICES = [
+COMMUNITY_ROLE_CHOICES = [
         ('Admin', 'Admin'),
         ('Staff', 'Staff'),
         ('Member', 'Member'),

@@ -4,7 +4,7 @@ from django.conf import settings
 from arena_auth.models import Nationality
 from arena_events.constants import EVENT_TYPES, STATUS_CHOICES, RACE_TIME_PROGRESS, RACE_PENALTY, EVENT_DOC_DIR, \
     CAR_TRACTION, CAR_ENGINE_POS, CAR_WHEEL_TYPE, CAR_STEER_POS, CFG, IND, RACE_LENGTH_TYPE, RACE_WEATHER, \
-    RACE_INITIAL_TIME
+    RACE_INITIAL_TIME, EVENT_ROLE_CHOICES
 
 
 class Event(models.Model):
@@ -106,3 +106,15 @@ class RaceCar(models.Model):
     performance_index = models.IntegerField()
     classification = models.CharField(max_length=255)
     multiclass_group_name = models.CharField(max_length=255, blank=True, null=True)
+
+
+class EventMember(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='members')
+    role = models.CharField(max_length=10, choices=EVENT_ROLE_CHOICES)
+
+    class Meta:
+        unique_together = ('user', 'event')
+
+    def __str__(self):
+        return f'{self.user.username} in {self.event.name} as {self.role}'
