@@ -6,17 +6,31 @@ from arena_network.utils import contains_prohibited_words
 from .models import Event, Race, RaceCar, Car, Circuit
 
 
+class CarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = '__all__'
+
+
+class CircuitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Circuit
+        fields = '__all__'
+
+
 class RaceCarSerializer(serializers.ModelSerializer):
-    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all())
+    car = CarSerializer(read_only=True)
+    car_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = RaceCar
-        fields = ['car', 'performance_index', 'classification', 'multiclass_group_name']
+        fields = ['car', 'car_id', 'performance_index', 'classification', 'multiclass_group_name']
 
 
 class RaceSerializer(serializers.ModelSerializer):
-    cars = RaceCarSerializer(many=True)
-    circuit = serializers.PrimaryKeyRelatedField(queryset=Circuit.objects.all())
+    cars = RaceCarSerializer(source='racecar_set', many=True)
+    circuit = CircuitSerializer(read_only=True)
+    circuit_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Race
@@ -24,7 +38,7 @@ class RaceSerializer(serializers.ModelSerializer):
             'length_type', 'length', 'initial_time_day', 'start_time_game', 'weather', 'race_start',
             'qualification', 'time_progress', 'timescale', 'dynamic_tyre', 'tyre_on_track', 'tyre_wear',
             'collision', 'dub_ghost', 'penalty', 'disqualified', 'box_stop', 'restrictions',
-            'multiclass', 'circuit', 'cars'
+            'multiclass', 'circuit', 'circuit_id', 'cars'
         ]
 
     def validate(self, data):
@@ -111,8 +125,24 @@ class EventSerializer(serializers.ModelSerializer):
             user = request.user
         event = Event.objects.create(created_by=user, status='Scheduled', **validated_data)
         for race_data in races_data:
-            cars_data = race_data.pop('cars')
-            race = Race.objects.create(event=event, **race_data)
+            cars_data = race_data.pop('racecar_set')
+            circuit_id = race_data.pop('circuit_id')
+            race = Race.objects.create(event=event, circuit_id=circuit_id, **race_data)
             for car_data in cars_data:
-                RaceCar.objects.create(race=race, **car_data)
+                car_id = car_data.pop('car_id')
+                RaceCar.objects.create(race=race, car_id=car_id, **car_data)
         return event
+
+
+class EventDetailSerializer(serializers.ModelSerializer):
+    races = RaceSerializer(many=True)
+    created_by = serializers.StringRelatedField()
+
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['created_by'] = instance.created_by.username
+        return representation

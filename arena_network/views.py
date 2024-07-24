@@ -70,7 +70,6 @@ class JoinCommunityView(APIView):
         except CommunityMember.DoesNotExist:
             pass
 
-        # Aggiungi l'utente come membro della community
         CommunityMember.objects.create(user=user, community=community, role='Member')
 
         return Response({"success": "You have successfully joined the community."}, status=status.HTTP_201_CREATED)
@@ -119,14 +118,12 @@ class RemoveMemberView(APIView):
 
         user = request.user
 
-        # Verifica se l'utente richiedente è un Admin
         try:
             admin_member = CommunityMember.objects.get(user=user, community=community, role='Admin')
         except CommunityMember.DoesNotExist:
             return Response({"error": "You do not have permission to remove members from this community."},
                             status=status.HTTP_403_FORBIDDEN)
 
-        # Verifica se il membro da rimuovere esiste nella community
         try:
             community_member = CommunityMember.objects.get(user=member_to_remove, community=community)
         except CommunityMember.DoesNotExist:
