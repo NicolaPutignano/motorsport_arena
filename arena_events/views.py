@@ -3,6 +3,7 @@ import logging
 
 from django.core import serializers
 from django.db import transaction
+from django.urls import reverse
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,10 +30,12 @@ class EventCreateView(generics.CreateAPIView):
                 event_serializer.is_valid(raise_exception=True)
                 event = event_serializer.save()
 
-                event_json = serializers.serialize('json', [event])
-                event_data = json.loads(event_json)[0]
+                join_url = request.build_absolute_uri(reverse('join_event', kwargs={'event_name': event.name}))
 
-                return Response(event_data, status=status.HTTP_201_CREATED)
+                return Response({
+                    'message': f"You have successfully created the event {event.name}",
+                    'join_url': join_url
+                }, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error during event creation: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
