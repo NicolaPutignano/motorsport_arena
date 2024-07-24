@@ -110,3 +110,9 @@ IND = [
 ]
 
 EVENT_DOC_DIR = ['event_documents/']
+
+EVENT_ROLE_CHOICES = [
+    ('Manager', 'Manager'),
+    ('Staff', 'Staff'),
+    ('Pilot', 'Pilot'),
+]
