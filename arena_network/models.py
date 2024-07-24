@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 
-from arena_network.constants import ROLE_CHOICES
+from arena_network.constants import COMMUNITY_ROLE_CHOICES
 
 
 class Community(models.Model):
@@ -19,7 +19,7 @@ class Community(models.Model):
 class CommunityMember(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='members')
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=10, choices=COMMUNITY_ROLE_CHOICES)
 
     class Meta:
         unique_together = ('user', 'community')
