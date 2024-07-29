@@ -10,6 +10,9 @@ from arena_events.constants import EVENT_TYPES, STATUS_CHOICES, RACE_TIME_PROGRE
 class Event(models.Model):
     name = models.CharField(max_length=255)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    multiclass = models.BooleanField(default=False)
+    multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
+    multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
     public = models.BooleanField(default=True)
     ranked = models.BooleanField(default=False)
@@ -90,9 +93,6 @@ class Race(models.Model):
     disqualified = models.BooleanField(default=False)
     box_stop = models.IntegerField()
     restrictions = models.CharField(max_length=255, blank=True, null=True)
-    multiclass = models.BooleanField(default=False)
-    multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
-    multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
     circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
     cars = models.ManyToManyField(Car, through='RaceCar')
 

@@ -1,15 +1,14 @@
 import logging
 
-from django.core import serializers
 from django.db import transaction
 from django.urls import reverse
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, views
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
 from .models import Event, EventMember
-from .serializers import EventSerializer, EventDetailSerializer
+from .serializers import EventSerializer, EventDetailSerializer, EventUpdateSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -92,5 +91,19 @@ class EventDetailView(generics.RetrieveAPIView):
                                                                                    user=self.request.user).exists():
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response("error: ""You do not have permission to view this event.",
+                return Response({"error": "You do not have permission to view this event."},
                                 status=status.HTTP_401_UNAUTHORIZED)
+
+
+class EventUpdateView(views.APIView):
+
+    def patch(self, request, **kwargs):
+        event_name = kwargs.get('event_name')
+        event = Event.objects.get(name=event_name)
+        if request.user.id != event.created_by_id:
+            return Response({"error": "You do not have permission to edit this event."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = EventUpdateSerializer(event, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

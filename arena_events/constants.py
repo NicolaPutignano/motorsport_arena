@@ -9,6 +9,7 @@ STATUS_CHOICES = [
     ('In progress', 'In progress'),
     ('Finished', 'Finished'),
     ('Deleted', 'Deleted'),
+    ('Archived', 'Archived'),
 ]
 
 RACE_TIME_PROGRESS = [

@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 from django.utils import timezone
 
@@ -37,8 +38,8 @@ class RaceSerializer(serializers.ModelSerializer):
         fields = [
             'length_type', 'length', 'initial_time_day', 'start_time_game', 'weather', 'race_start',
             'qualification', 'time_progress', 'timescale', 'dynamic_tyre', 'tyre_on_track', 'tyre_wear',
-            'collision', 'dub_ghost', 'penalty', 'disqualified', 'box_stop', 'restrictions',
-            'multiclass', 'circuit', 'circuit_id', 'cars'
+            'collision', 'dub_ghost', 'penalty', 'disqualified', 'box_stop', 'restrictions', 'circuit', 'circuit_id',
+            'cars'
         ]
 
     def validate(self, data):
@@ -69,7 +70,8 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['name', 'event_type', 'public', 'ranked', 'document', 'poster', 'races']
+        fields = ['name', 'event_type', 'multiclass', 'multiclass_group_name1', 'multiclass_group_name2', 'public',
+                  'ranked', 'document', 'poster', 'races']
 
     def validate_name(self, value):
         if Event.objects.filter(name=value).exists():
@@ -146,3 +148,28 @@ class EventDetailSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['created_by'] = instance.created_by.username
         return representation
+
+
+class EventUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['name', 'event_type', 'public', 'ranked', 'poster', 'document', 'multiclass', 'multiclass_group_name1', 'multiclass_group_name2']
+        read_only_fields = ['status']
+
+    def validate(self, data):
+        event = self.instance
+        if event.status in ['Finished', 'Archived']:
+            raise serializers.ValidationError("Event cannot be modified as it is already finished or archived.")
+        if event.status == 'In progress' and not any(k in data for k in ['poster', 'document']):
+            raise serializers.ValidationError("Only the poster and document can be updated while the event is in progress.")
+        return data
+
+    def update(self, instance, validated_data):
+        if instance.status == 'Scheduled':
+            with transaction.atomic():
+                instance = super().update(instance, validated_data)
+                if 'multiclass' in validated_data or 'multiclass_group_name1' in validated_data:
+                    RaceCar.objects.filter(race__event=instance).update(
+                        multiclass_group_name=validated_data.get('multiclass_group_name1', instance.multiclass_group_name1)
+                    )
+        return instance
