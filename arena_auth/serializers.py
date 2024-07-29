@@ -86,7 +86,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
-        UserAttr.objects.create(user=user, xbox_id=xbox_id)
+        UserAttr.objects.create(user=user, xbox_id=xbox_id, role='Member')
 
         return user
 
