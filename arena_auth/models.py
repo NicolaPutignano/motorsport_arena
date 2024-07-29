@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .constants import PLATFORMS, DEVICES
+from .constants import PLATFORMS, DEVICES, USER_ROLE
 
 
 class Nationality(models.Model):
@@ -18,6 +18,7 @@ class Nationality(models.Model):
 class UserAttr(models.Model):
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
+    role = models.CharField(max_length=10, choices=USER_ROLE, default="Member")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     xbox_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
     nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True, blank=True)
