@@ -3,3 +3,6 @@
 
 # Ignore all log files
 *.log
+
+# Ignore all Style files
+codeStyleConfig.xml

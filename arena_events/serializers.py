@@ -138,6 +138,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 class EventDetailSerializer(serializers.ModelSerializer):
     races = RaceSerializer(many=True)
+    cars = EventCarSerializer(source='eventcar_set', many=True, read_only=True)
     created_by = serializers.StringRelatedField()
 
     class Meta:
@@ -159,14 +160,21 @@ class EventUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = self.instance
+
         if event.status in [Status.Finished, Status.ARCHIVED]:
             raise serializers.ValidationError("Event cannot be modified as it is already finished or archived.")
-        if event.status == Status.PROGRESS and not any(k in data for k in ['poster', 'document']):
-            raise serializers.ValidationError("Only the poster and document can be updated while the event is in progress.")
+        if event.status == Status.PROGRESS:
+            if not all(key in ['poster', 'document'] for key in data.keys()):
+                raise serializers.ValidationError(
+                    "Only the poster and document can be updated while the event is in progress.")
+        if event.status == Status.SCHEDULED:
+            if 'multiclass' in data and data['multiclass']:
+                if not all(key in data for key in ['multiclass_group_name1', 'multiclass_group_name2']):
+                    raise serializers.ValidationError(
+                        "When multiclass is true, 'multiclass_group_name1' and 'multiclass_group_name2' must be provided.")
         return data
 
     def update(self, instance, validated_data):
-        if instance.status == Status.SCHEDULED:
-            with transaction.atomic():
-                instance = super().update(instance, validated_data)
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
         return instance

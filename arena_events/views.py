@@ -70,7 +70,7 @@ class JoinEventView(APIView):
 
 
 class EventDetailView(generics.RetrieveAPIView):
-    queryset = Event.objects.all()
+    queryset = Event.objects.all().select_related('created_by').prefetch_related('races', 'eventcar_set__car')
     serializer_class = EventDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
@@ -97,12 +97,20 @@ class EventDetailView(generics.RetrieveAPIView):
 
 
 class EventUpdateView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def patch(self, request, **kwargs):
         event_name = kwargs.get('event_name')
-        event = Event.objects.get(name=event_name)
+        try:
+            event = Event.objects.get(name=event_name)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found."}, status=status.HTTP_404_NOT_FOUND)
+
         if request.user.id != event.created_by_id:
-            return Response({"error": "You do not have permission to edit this event."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "You do not have permission to edit this event."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         serializer = EventUpdateSerializer(event, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
