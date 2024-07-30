@@ -36,10 +36,11 @@ class RaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Race
         fields = [
-            'race_start', 'game_type', 'number_of_laps', 'race_timer', 'race_starting_time', 'custom_start_time', 'time_progress',
-            'timescale', 'weather', 'dynamic_track_rubber', 'start_track_rubber_level', 'collision', 'ghost_backmarkers',
-            'tire_wear', 'penalty', 'disqualified', 'box_stop', 'suggested_line', 'stm', 'tcs', 'shifting_assist',
-            'steering_assist', 'throttle_assist', 'breaking_assist', 'forced_camera_view', 'circuit', 'circuit_id'
+            'race_start', 'game_type', 'number_of_laps', 'race_timer', 'race_starting_time', 'custom_start_time',
+            'time_progress', 'timescale', 'weather', 'dynamic_track_rubber', 'start_track_rubber_level', 'collision',
+            'ghost_backmarkers', 'tire_wear', 'penalty', 'disqualified', 'box_stop', 'suggested_line', 'stm', 'tcs',
+            'shifting_assist', 'steering_assist', 'throttle_assist', 'breaking_assist', 'forced_camera_view', 'circuit',
+            'circuit_id'
         ]
 
     def validate(self, data):
