@@ -3,38 +3,9 @@ from django.conf import settings
 
 from arena_auth.models import Nationality
 from arena_events.constants import EVENT_DOC_DIR, CAR_TRACTION, CAR_ENGINE_POS, CAR_WHEEL_TYPE, CAR_STEER_POS, CFG, \
-    IND, EVENT_ROLE_CHOICES
+    IND
 from arena_events.enum import EventTypes, Status, RaceGameType, RaceStartingTime, RaceTimeProgress, RaceWeather, \
-    RacePenalty, RaceShifting, RaceSteering, RaceCameraView, RaceBreakingAssist
-
-
-class Event(models.Model):
-    name = models.CharField(max_length=255)
-    event_type = models.CharField(max_length=20, choices=EventTypes.choices)
-    multiclass = models.BooleanField(default=False)
-    multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
-    multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
-    public = models.BooleanField(default=True)
-    ranked = models.BooleanField(default=False)
-    poster = models.ImageField(upload_to='events/poster/', blank=True, null=True)
-    document = models.FileField(upload_to=EVENT_DOC_DIR, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events_created')
-
-    def __str__(self):
-        return self.name
-
-
-class Circuit(models.Model):
-    name = models.CharField(max_length=255)
-    configuration = models.CharField(max_length=255)
-    length = models.FloatField()
-    country = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True, blank=True)
-    forza_id = models.IntegerField()
-
-    def __str__(self):
-        return self.name
+    RacePenalty, RaceShifting, RaceSteering, RaceCameraView, RaceBreakingAssist, EventRole
 
 
 class Car(models.Model):
@@ -73,13 +44,42 @@ class Car(models.Model):
         return self.model
 
 
+class Event(models.Model):
+    name = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=20, choices=EventTypes.choices)
+    multiclass = models.BooleanField(default=False)
+    multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
+    multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
+    cars = models.ManyToManyField(Car, through='EventCar')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
+    public = models.BooleanField(default=True)
+    ranked = models.BooleanField(default=False)
+    poster = models.ImageField(upload_to='events/poster/', blank=True, null=True)
+    document = models.FileField(upload_to=EVENT_DOC_DIR, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events_created')
+
+    def __str__(self):
+        return self.name
+
+
+class Circuit(models.Model):
+    name = models.CharField(max_length=255)
+    configuration = models.CharField(max_length=255)
+    length = models.FloatField()
+    country = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True, blank=True)
+    forza_id = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
 class Race(models.Model):
     event = models.ForeignKey(Event, related_name='races', on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     race_start = models.DateTimeField()
     qualification = models.TextField(blank=True, null=True)
     circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
-    cars = models.ManyToManyField(Car, through='RaceCar')
     game_type = models.CharField(max_length=20, choices=RaceGameType.choices, default=RaceGameType.CIRCUIT_RACE)
     number_of_laps = models.IntegerField(blank=True, null=True)
     race_timer = models.IntegerField(blank=True, null=True)
@@ -111,8 +111,8 @@ class Race(models.Model):
         return f'{self.event.name} - {self.race_start}'
 
 
-class RaceCar(models.Model):
-    race = models.ForeignKey(Race, on_delete=models.CASCADE)
+class EventCar(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
     performance_index = models.IntegerField()
     classification = models.CharField(max_length=255)
@@ -122,7 +122,7 @@ class RaceCar(models.Model):
 class EventMember(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='members')
-    role = models.CharField(max_length=10, choices=EVENT_ROLE_CHOICES)
+    role = models.CharField(max_length=10, choices=EventRole.choices, default=EventRole.PILOT)
 
     class Meta:
         unique_together = ('user', 'event')

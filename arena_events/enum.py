@@ -31,10 +31,10 @@ class RaceStartingTime(models.TextChoices):
     CUSTOM = "Custom"
     SUNRISE = "Sunrise"
     MORNING = "Morning"
-    LATE_MORNING = "Late morning"
+    LATE_MORNING = "Late Morning"
     NOON = "Noon"
     AFTERNOON = "Afternoon"
-    LATE_AFTERNOON = "Late afternoon"
+    LATE_AFTERNOON = "Late Afternoon"
     EVENING = "Evening"
     SUNSET = "Sunset"
     NIGHT = "Night"
@@ -95,7 +95,7 @@ class RaceBreakingAssist(models.TextChoices):
 
 
 class RaceCameraView(models.TextChoices):
-    NONE = "Assisted"
+    NONE = "None"
     BUMPER = "Bumper"
     HOOD = "Hood"
     COCKPIT = "Cockpit"
@@ -103,3 +103,8 @@ class RaceCameraView(models.TextChoices):
     CHASE_NEAR = "Chase Near"
     CHASE_FAR = "Chase Far"
 
+
+class EventRole(models.TextChoices):
+    MANAGER = "Manager"
+    STAFF = "Staff"
+    PILOT = "Pilot"

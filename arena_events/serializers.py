@@ -4,7 +4,8 @@ from django.utils import timezone
 
 from arena_network.constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from arena_network.utils import contains_prohibited_words
-from .models import Event, Race, RaceCar, Car, Circuit
+from .enum import RaceStartingTime, Status, EventTypes
+from .models import Event, Race, EventCar, Car, Circuit
 
 
 class CarSerializer(serializers.ModelSerializer):
@@ -19,59 +20,51 @@ class CircuitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RaceCarSerializer(serializers.ModelSerializer):
+class EventCarSerializer(serializers.ModelSerializer):
     car = CarSerializer(read_only=True)
     car_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = RaceCar
-        fields = ['car', 'car_id', 'performance_index', 'classification', 'multiclass_group_name']
+        model = EventCar
+        fields = ['car', 'car_id', 'performance_index', 'classification', 'multiclass_group']
 
 
 class RaceSerializer(serializers.ModelSerializer):
-    cars = RaceCarSerializer(source='racecar_set', many=True)
     circuit = CircuitSerializer(read_only=True)
     circuit_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Race
         fields = [
-            'length_type', 'length', 'initial_time_day', 'start_time_game', 'weather', 'race_start',
-            'qualification', 'time_progress', 'timescale', 'dynamic_tyre', 'tyre_on_track', 'tyre_wear',
-            'collision', 'dub_ghost', 'penalty', 'disqualified', 'box_stop', 'restrictions', 'circuit', 'circuit_id',
-            'cars'
+            'race_start', 'game_type', 'number_of_laps', 'race_timer', 'race_starting_time', 'custom_start_time', 'time_progress',
+            'timescale', 'weather', 'dynamic_track_rubber', 'start_track_rubber_level', 'collision', 'ghost_backmarkers',
+            'tire_wear', 'penalty', 'disqualified', 'box_stop', 'suggested_line', 'stm', 'tcs', 'shifting_assist',
+            'steering_assist', 'throttle_assist', 'breaking_assist', 'forced_camera_view', 'circuit', 'circuit_id'
         ]
 
     def validate(self, data):
-        if data.get('multiclass'):
-            for car in data.get('cars', []):
-                if not car.get('multiclass_group_name'):
-                    raise serializers.ValidationError(
-                        "If multiclass is true, all cars must have a multiclass_group_name.")
-        if data.get('initial_time_day') == 'Personalized' and not data.get('start_time_game'):
+        if data.get('race_starting_time') == RaceStartingTime.CUSTOM and not data.get('custom_start_time'):
             raise serializers.ValidationError(
-                "If initial_time_day is 'Personalized', start_time_game must be provided.")
-        if data.get('time_progress') == 'Continuous' and not data.get('timescale'):
-            raise serializers.ValidationError("If time_progress is 'Continuous', timescale must be provided.")
-        if data.get('dynamic_tyre') and not data.get('tyre_on_track'):
-            raise serializers.ValidationError("If dynamic_tyre is true, tyre_on_track must be provided.")
+                "If race starting time is 'Custom', custom start time must be provided.")
+        if data.get('time_progress') == 'Rolling' and not data.get('timescale'):
+            raise serializers.ValidationError("If time progress is 'Rolling', timescale must be provided.")
+        if data.get('dynamic_track_rubber') and not data.get('start_track_rubber_level'):
+            raise serializers.ValidationError("If dynamic track rubber is true, start track rubber level must be provided.")
         return data
 
     def create(self, validated_data):
-        cars_data = validated_data.pop('cars')
         race = Race.objects.create(**validated_data)
-        for car_data in cars_data:
-            RaceCar.objects.create(race=race, **car_data)
         return race
 
 
 class EventSerializer(serializers.ModelSerializer):
     races = RaceSerializer(many=True)
+    cars = EventCarSerializer(many=True)
 
     class Meta:
         model = Event
         fields = ['name', 'event_type', 'multiclass', 'multiclass_group_name1', 'multiclass_group_name2', 'public',
-                  'ranked', 'document', 'poster', 'races']
+                  'ranked', 'document', 'poster', 'races', 'cars']
 
     def validate_name(self, value):
         if Event.objects.filter(name=value).exists():
@@ -107,7 +100,7 @@ class EventSerializer(serializers.ModelSerializer):
                 f"Hai indicato una data per l'inizio di una gara, antecedenti alla data odierna"
             )
 
-        if event_type in ['Championship', 'League']:
+        if event_type in [EventTypes.CHAMPIONSHIP, EventTypes.LEAGUE]:
             race_dates = [(race['race_start'], race) for race in races]
             non_sequential_dates = [race for i, (date, race) in enumerate(race_dates) if
                                     i > 0 and date <= race_dates[i - 1][0]]
@@ -117,22 +110,28 @@ class EventSerializer(serializers.ModelSerializer):
                     f"Le date di inizio gara non sono consecutive"
                 )
 
+        if data.get('multiclass'):
+            for car in data.get('cars', []):
+                if not car.get('multiclass_group'):
+                    raise serializers.ValidationError(
+                        "If multiclass is true, all cars must have a multiclass group.")
+
         return data
 
     def create(self, validated_data):
         races_data = validated_data.pop('races')
+        cars_data = validated_data.pop('cars')
         request = self.context.get('request', None)
         user = None
         if request and hasattr(request, "user"):
             user = request.user
-        event = Event.objects.create(created_by=user, status='Scheduled', **validated_data)
+        event = Event.objects.create(created_by=user, status=Status.SCHEDULED, **validated_data)
         for race_data in races_data:
-            cars_data = race_data.pop('racecar_set')
             circuit_id = race_data.pop('circuit_id')
             race = Race.objects.create(event=event, circuit_id=circuit_id, **race_data)
-            for car_data in cars_data:
-                car_id = car_data.pop('car_id')
-                RaceCar.objects.create(race=race, car_id=car_id, **car_data)
+        for car_data in cars_data:
+            car_id = car_data.pop('car_id')
+            EventCar.objects.create(event=event, car_id=car_id, **car_data)
         return event
 
 
@@ -153,23 +152,20 @@ class EventDetailSerializer(serializers.ModelSerializer):
 class EventUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['name', 'event_type', 'public', 'ranked', 'poster', 'document', 'multiclass', 'multiclass_group_name1', 'multiclass_group_name2']
+        fields = ['name', 'event_type', 'public', 'ranked', 'poster', 'document', 'multiclass', 'multiclass_group_name1',
+                  'multiclass_group_name2']
         read_only_fields = ['status']
 
     def validate(self, data):
         event = self.instance
-        if event.status in ['Finished', 'Archived']:
+        if event.status in [Status.Finished, Status.ARCHIVED]:
             raise serializers.ValidationError("Event cannot be modified as it is already finished or archived.")
-        if event.status == 'In progress' and not any(k in data for k in ['poster', 'document']):
+        if event.status == Status.PROGRESS and not any(k in data for k in ['poster', 'document']):
             raise serializers.ValidationError("Only the poster and document can be updated while the event is in progress.")
         return data
 
     def update(self, instance, validated_data):
-        if instance.status == 'Scheduled':
+        if instance.status == Status.SCHEDULED:
             with transaction.atomic():
                 instance = super().update(instance, validated_data)
-                if 'multiclass' in validated_data or 'multiclass_group_name1' in validated_data:
-                    RaceCar.objects.filter(race__event=instance).update(
-                        multiclass_group_name=validated_data.get('multiclass_group_name1', instance.multiclass_group_name1)
-                    )
         return instance

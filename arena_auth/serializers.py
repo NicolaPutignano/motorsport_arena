@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from arena_network.constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from arena_network.utils import contains_prohibited_words
+from .enum import UserRole
 from .models import CustomUser, UserAttr
 
 
@@ -86,7 +87,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
-        UserAttr.objects.create(user=user, xbox_id=xbox_id, role='Member')
+        UserAttr.objects.create(user=user, xbox_id=xbox_id, role=UserRole.MEMBER)
 
         return user
 

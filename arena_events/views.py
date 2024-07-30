@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
+from .enum import EventRole
 from .models import Event, EventMember
 from .serializers import EventSerializer, EventDetailSerializer, EventUpdateSerializer
 
@@ -63,7 +64,7 @@ class JoinEventView(APIView):
         except EventMember.DoesNotExist:
             pass
 
-        EventMember.objects.create(user=user, event=event, role='Pilot')
+        EventMember.objects.create(user=user, event=event, role= EventRole.PILOT)
 
         return Response({"success": "You have successfully joined the event."}, status=status.HTTP_201_CREATED)
 
