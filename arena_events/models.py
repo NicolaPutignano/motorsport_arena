@@ -2,18 +2,19 @@ from django.db import models
 from django.conf import settings
 
 from arena_auth.models import Nationality
-from arena_events.constants import EVENT_TYPES, STATUS_CHOICES, RACE_TIME_PROGRESS, RACE_PENALTY, EVENT_DOC_DIR, \
-    CAR_TRACTION, CAR_ENGINE_POS, CAR_WHEEL_TYPE, CAR_STEER_POS, CFG, IND, RACE_LENGTH_TYPE, RACE_WEATHER, \
-    RACE_INITIAL_TIME, EVENT_ROLE_CHOICES
+from arena_events.constants import EVENT_DOC_DIR, CAR_TRACTION, CAR_ENGINE_POS, CAR_WHEEL_TYPE, CAR_STEER_POS, CFG, \
+    IND, EVENT_ROLE_CHOICES
+from arena_events.enum import EventTypes, Status, RaceGameType, RaceStartingTime, RaceTimeProgress, RaceWeather, \
+    RacePenalty, RaceShifting, RaceSteering, RaceCameraView, RaceBreakingAssist
 
 
 class Event(models.Model):
     name = models.CharField(max_length=255)
-    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    event_type = models.CharField(max_length=20, choices=EventTypes.choices)
     multiclass = models.BooleanField(default=False)
     multiclass_group_name1 = models.CharField(max_length=255, blank=True, null=True)
     multiclass_group_name2 = models.CharField(max_length=255, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     public = models.BooleanField(default=True)
     ranked = models.BooleanField(default=False)
     poster = models.ImageField(upload_to='events/poster/', blank=True, null=True)
@@ -74,27 +75,37 @@ class Car(models.Model):
 
 class Race(models.Model):
     event = models.ForeignKey(Event, related_name='races', on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
-    length_type = models.CharField(max_length=20, choices=RACE_LENGTH_TYPE, default='Laps')
-    length = models.IntegerField()
-    initial_time_day = models.CharField(max_length=100, choices=RACE_INITIAL_TIME, default='Late morning')
-    start_time_game = models.CharField(max_length=5, blank=True, null=True)
-    weather = models.CharField(max_length=100, choices=RACE_WEATHER)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     race_start = models.DateTimeField()
     qualification = models.TextField(blank=True, null=True)
-    time_progress = models.CharField(max_length=50, choices=RACE_TIME_PROGRESS)
-    timescale = models.CharField(max_length=4, blank=True, null=True)
-    dynamic_tyre = models.BooleanField(default=False)
-    tyre_on_track = models.IntegerField(default=50, blank=True, null=True)
-    tyre_wear = models.FloatField()
-    collision = models.BooleanField(default=False)
-    dub_ghost = models.BooleanField(default=False)
-    penalty = models.CharField(max_length=20, choices=RACE_PENALTY)
-    disqualified = models.BooleanField(default=False)
-    box_stop = models.IntegerField()
-    restrictions = models.CharField(max_length=255, blank=True, null=True)
     circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
     cars = models.ManyToManyField(Car, through='RaceCar')
+    game_type = models.CharField(max_length=20, choices=RaceGameType.choices, default=RaceGameType.CIRCUIT_RACE)
+    number_of_laps = models.IntegerField()
+    race_timer = models.IntegerField()
+    race_starting_time = models.CharField(max_length=100, choices=RaceStartingTime.choices,
+                                          default=RaceStartingTime.LATE_MORNING)
+    custom_start_time = models.CharField(max_length=5, blank=True, null=True)
+    time_progress = models.CharField(max_length=50, choices=RaceTimeProgress.choices)
+    timescale = models.CharField(max_length=4, blank=True, null=True)
+    weather = models.CharField(max_length=100, choices=RaceWeather.choices)
+    dynamic_track_rubber = models.BooleanField(default=False)
+    start_track_rubber_level = models.IntegerField(default=50, blank=True, null=True)
+    collision = models.BooleanField(default=False)
+    ghost_backmarkers = models.BooleanField(default=False)
+    tire_wear = models.FloatField()
+    penalty = models.CharField(max_length=20, choices=RacePenalty.choices)
+    disqualified = models.BooleanField(default=False)
+    box_stop = models.IntegerField()
+    suggested_line = models.BooleanField(default=False)
+    stm = models.BooleanField(default=False)
+    tcs = models.BooleanField(default=False)
+    shifting_assist = models.CharField(max_length=20, choices=RaceShifting.choices, default=RaceShifting.AUTOMATIC)
+    steering_assist = models.CharField(max_length=20, choices=RaceSteering.choices, default=RaceSteering.FULLY)
+    throttle_assist = models.BooleanField(default=False)
+    breaking_assist = models.CharField(max_length=20, choices=RaceBreakingAssist.choices,
+                                       default=RaceBreakingAssist.ASSISTED)
+    forced_camera_view = models.CharField(max_length=20, choices=RaceCameraView.choices, default=RaceCameraView.NONE)
 
     def __str__(self):
         return f'{self.event.name} - {self.race_start}'
@@ -105,7 +116,7 @@ class RaceCar(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
     performance_index = models.IntegerField()
     classification = models.CharField(max_length=255)
-    multiclass_group_name = models.CharField(max_length=255, blank=True, null=True)
+    multiclass_group = models.IntegerField(blank=True, null=True)
 
 
 class EventMember(models.Model):
