@@ -1,10 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
-from .constants import PLATFORMS, DEVICES, USER_ROLE
+from .enum import Platform, Devices, UserRole
 
 
 class Nationality(models.Model):
@@ -18,12 +16,12 @@ class Nationality(models.Model):
 class UserAttr(models.Model):
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
-    role = models.CharField(max_length=10, choices=USER_ROLE, default="Member")
+    role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.MEMBER)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     xbox_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
     nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True, blank=True)
-    platform = models.CharField(max_length=10, choices=PLATFORMS, blank=True, null=True)
-    device = models.CharField(max_length=10, choices=DEVICES, blank=True, null=True)
+    platform = models.CharField(max_length=10, choices=Platform.choices, blank=True, null=True)
+    device = models.CharField(max_length=10, choices=Devices.choices, blank=True, null=True)
     forza_rating = models.IntegerField(default=1000, validators=[
         MinValueValidator(0), MaxValueValidator(5000)
     ])
