@@ -58,25 +58,24 @@ class CustomTokenObtainPairView(APIView):
             return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class LogoutAndBlacklistRefreshTokenForUserView(APIView):
+class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        refresh_token = serializer.validated_data['refresh_token']
         try:
-            token = RefreshToken(refresh_token)
+            token = RefreshToken(serializer.validated_data['refresh_token'])
             token.blacklist()
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
             response.delete_cookie('access_token')
             return response
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Enable2FAView(APIView):

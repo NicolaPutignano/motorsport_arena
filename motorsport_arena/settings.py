@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_static',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'arena_auth',
     'arena_network',
