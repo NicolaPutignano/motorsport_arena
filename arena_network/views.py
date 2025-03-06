@@ -26,10 +26,13 @@ class CommunityDeleteView(generics.DestroyAPIView):
     serializer_class = CommunitySerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+    lookup_field = 'id'  # Usa l'ID per la ricerca
+    lookup_url_kwarg = 'community_id'  # L'argomento nell'url sarà community_id
 
     def delete(self, request, *args, **kwargs):
         community = self.get_object()
         user = request.user
+
         try:
             community_member = CommunityMember.objects.get(user=user, community=community, role='Admin')
             send_mail(
@@ -42,8 +45,8 @@ class CommunityDeleteView(generics.DestroyAPIView):
         except CommunityMember.DoesNotExist:
             return Response({"error": "You do not have permission to delete this community."},
                             status=status.HTTP_403_FORBIDDEN)
-
-        return super().delete(request, *args, **kwargs)
+        self.perform_destroy(community)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class JoinCommunityView(APIView):
@@ -51,15 +54,16 @@ class JoinCommunityView(APIView):
     authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request, *args, **kwargs):
-        community_name = kwargs.get('community_name')
+        community_id = kwargs.get('community_id')  # Ottieni community_id da kwargs
         try:
-            community = Community.objects.get(name=community_name)
+            community = Community.objects.get(id=community_id)
         except Community.DoesNotExist:
             return Response({"error": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
 
         # Controlla se l'utente è già un membro della community o è stato bannato in precedenza
+
         try:
             community_member = CommunityMember.objects.get(user=user, community=community)
             if community_member.role == 'Banned':
