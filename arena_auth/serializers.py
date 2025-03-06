@@ -63,9 +63,20 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_xbox_id(self, value):
-        if not re.match(r'^[a-zA-Z][a-zA-Z0-9]{2,19}$', value):
+        if not re.match(r'^[a-zA-Z][a-zA-Z0-9#]{2,19}$', value):
             raise serializers.ValidationError(
-                "Xbox ID non valido. Deve essere lungo 3-19 caratteri, iniziare con una lettera e contenere solo lettere e numeri.")
+                "Xbox ID non valido. Deve essere lungo 3-20 caratteri, iniziare con una lettera e contenere solo lettere, numeri e il carattere '#'.")
+        if '#' in value:
+            parts = value.split('#')
+            if len(parts) != 2:
+                raise serializers.ValidationError("Xbox ID non valido. Deve contenere al massimo un carattere '#'.")
+            suffix = parts[1]
+            if not suffix.isdigit():
+                raise serializers.ValidationError(
+                    "Xbox ID non valido. Dopo il carattere '#' devono essere presenti solo numeri.")
+
+            if len(suffix) > 4:
+                raise serializers.ValidationError("Xbox ID non valido. Il suffisso non può superare 4 cifre.")
         if UserAttr.objects.filter(xbox_id=value).exists():
             raise serializers.ValidationError("ID Xbox già presente nel database.")
         return value
