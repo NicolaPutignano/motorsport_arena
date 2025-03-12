@@ -65,7 +65,7 @@ PROHIBITED_WORDS_EN = [
     'dumbass', 'Kys', 'Kill', 'Die', 'Cliff', 'Bridge', 'Shooting', 'Shoot', 'Bomb', 'Terrorist', 'Terrorism',
     'Bombed', 'Trump', 'Maga', 'Conservative', 'Make america great again', 'Far right', 'Necrophilia', 'Mongoloid',
     'Furfag', 'Cp', 'Pedo', 'Pedophile', 'Pedophilia', 'Child predator', 'Predatory', 'Depression', 'Cut myself',
-    'I want to die', 'Fuck life', 'Redtube', 'Loli', 'Lolicon', 'Cub'
+    'I want to die', 'Fuck life', 'Redtube', 'Loli', 'Lolicon', 'Cub', 'admin', 'root', 'password', 'superuser',
 ]
 
 PROHIBITED_WORDS_IT = [
@@ -96,7 +96,8 @@ PROHIBITED_WORDS_IT = [
     'vaffanculo', 'masturbare', 'lesbica', 'culo', 'porno', 'tette', 'stronzo', 'merda', 'testicoli', 'vaffanculo',
     'pene', 'vagina', 'lesbica', 'pene', 'culo', 'testicoli', 'fighe', 'stronzo', 'merda', 'vaffanculo', 'porno',
     'masturbare', 'vagina', 'testicoli', 'pene', 'fighe', 'culo', 'merda', 'vaffanculo', 'testicoli', 'vagina',
-    'lesbica', 'pene', 'porno', 'fighe', 'stronzo', 'merda', 'vaffanculo', 'testicoli', 'pene', 'vagina'
+    'lesbica', 'pene', 'porno', 'fighe', 'stronzo', 'merda', 'vaffanculo', 'testicoli', 'pene', 'vagina', 'amministratore',
+    'radice', 'parola chiave', 'superutente'
 ]
 
 COMMUNITY_ROLE_CHOICES = [
