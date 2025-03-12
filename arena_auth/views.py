@@ -25,7 +25,7 @@ class CustomTokenObtainPairView(APIView):
     permission_classes = ()
     authentication_classes = ()
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(username=username, password=password)
@@ -63,7 +63,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def post(self, request, *args, **kwargs):
+    def delete(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -104,13 +104,12 @@ class Verify2FAView(APIView):
 class DeleteAccountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request):
         user = request.user
         email = user.email
         username = user.username
         user.delete()
 
-        # Invia un'email di conferma
         send_mail(
             'Conferma di Cancellazione dell\'Account',
             f'Ciao {username},\n\nIl tuo account è stato cancellato con successo.',

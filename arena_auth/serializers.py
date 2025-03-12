@@ -22,27 +22,29 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ('username', 'password', 'password2', 'email', 'xbox_id', 'accept_privacy_policy',
                   'accept_terms_and_conditions')
 
-    def validate_password(self, value):
+    @staticmethod
+    def validate_password(value):
         if value:
-                if len(value) < 8:
-                    raise serializers.ValidationError("La password deve contenere almeno 8 caratteri.")
-                if not re.search(r'[A-Z]', value):
-                    raise serializers.ValidationError("La password deve contenere almeno una lettera maiuscola.")
-                if not re.search(r'[a-z]', value):
-                    raise serializers.ValidationError("La password deve contenere almeno una lettera minuscola.")
-                if not re.search(r'[0-9]', value):
-                    raise serializers.ValidationError("La password deve contenere almeno un numero.")
-                if not re.search(r'[\W_]', value):
-                    raise serializers.ValidationError("La password deve contenere almeno un carattere speciale.")
+            if len(value) < 8:
+                raise serializers.ValidationError("La password deve contenere almeno 8 caratteri.")
+            if not re.search(r'[A-Z]', value):
+                raise serializers.ValidationError("La password deve contenere almeno una lettera maiuscola.")
+            if not re.search(r'[a-z]', value):
+                raise serializers.ValidationError("La password deve contenere almeno una lettera minuscola.")
+            if not re.search(r'[0-9]', value):
+                raise serializers.ValidationError("La password deve contenere almeno un numero.")
+            if not re.search(r'[\W_]', value):
+                raise serializers.ValidationError("La password deve contenere almeno un carattere speciale.")
         return value
 
     def validate_password2(self, value):
-        password=self.initial_data.get('password')
-        if value!=password:
+        password = self.initial_data.get('password')
+        if value != password:
             raise serializers.ValidationError("Le password non corrispondono")
         return value
 
-    def validate_email(self, value):
+    @staticmethod
+    def validate_email(value):
         try:
             validate_email(value)
         except ValidationError:
@@ -51,34 +53,38 @@ class CustomUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Indirizzo email già presente nel database.")
         return value
 
-    def validate_username(self, value):
+    @staticmethod
+    def validate_username(value):
         if len(value) < 4 or len(value) > 16:
             raise serializers.ValidationError("L'username deve contenere tra 4 e 16 caratteri.")
         if not re.match(r'^[a-zA-Z0-9_]+$', value):
             raise serializers.ValidationError("L'username può contenere solo lettere, numeri e underscore.")
         if CustomUser.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username già presente nel database.")
-        if contains_prohibited_words(value, PROHIBITED_WORDS_EN) or contains_prohibited_words(value,                                                                              PROHIBITED_WORDS_IT):
+        if contains_prohibited_words(value, PROHIBITED_WORDS_EN) or contains_prohibited_words(value, PROHIBITED_WORDS_IT):
             raise serializers.ValidationError("L'username contiene parole proibite.")
         return value
 
-    def validate_xbox_id(self, value):
+    @staticmethod
+    def validate_xbox_id(value):
         if not re.match(r'^[a-zA-Z][a-zA-Z0-9]{2,19}$', value):
             raise serializers.ValidationError(
-                "Xbox ID non valido. Deve essere lungo 3-19 caratteri, iniziare con una lettera e contenere solo lettere e numeri.")
+                "Xbox ID non valido. Deve essere lungo 3-19 caratteri, "
+                "iniziare con una lettera e contenere solo lettere e numeri.")
         if UserAttr.objects.filter(xbox_id=value).exists():
             raise serializers.ValidationError("ID Xbox già presente nel database.")
         return value
 
-    def validate_accept_privacy_policy(self, value):
+    @staticmethod
+    def validate_accept_privacy_policy(value):
         if not value:
             raise serializers.ValidationError("Devi accettare le politiche sulla privacy.")
         return value
 
-    def validate_accept_terms_and_conditions(self, value):
+    @staticmethod
+    def validate_accept_terms_and_conditions(value):
         if not value:
             raise serializers.ValidationError("Devi accettare i termini e condizioni")
-
 
     def create(self, validated_data):
         validated_data.pop('password2')
