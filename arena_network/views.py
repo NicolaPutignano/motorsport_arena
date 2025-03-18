@@ -1,4 +1,6 @@
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.mail import send_mail
+from django.views.generic import UpdateView
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -136,3 +138,36 @@ class RemoveMemberView(APIView):
         community_member.save()
 
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
+
+
+class CommunityUpdateAPIView(generics.UpdateAPIView):
+    queryset = Community.objects.all()
+    serializer_class = None  # Definito nel get_serializer_class
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'name'
+    http_method_names = ['patch']  # Solo PATCH è consentito
+
+    def get_serializer_class(self):
+        from rest_framework import serializers
+
+        class CommunityUpdateSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = Community
+                fields = ['bio', 'avatar']
+
+            def validate_bio(self, value):
+                if value:
+                    value_lower = value.lower()
+                    for word in PROHIBITED_WORDS_IT:
+                        if word.lower() in value_lower:
+                            raise ValidationError(f"La bio contiene una parola proibita: {word}")
+                    for word in PROHIBITED_WORDS_EN:
+                        if word.lower() in value_lower:
+                            raise ValidationError(f"La bio contiene una parola proibita: {word}")
+                return value
+        return CommunityUpdateSerializer
+
+    def check_object_permissions(self, request, obj):
+        if obj.created_by != request.user:
+            self.permission_denied(request, message="Solo il creatore può modificare questa community.")
+        super().check_object_permissions(request, obj)
