@@ -8,6 +8,6 @@ urlpatterns = [
     path('community/join/<str:community_name>/', JoinCommunityView.as_view(), name='join_community'),
     path('community/leave/<str:community_name>/', LeaveCommunityView.as_view(), name='leave_community'),
     path('community/remove/<str:community_name>/<str:username>/', RemoveMemberView.as_view(), name='remove_member'),
-    path('community/<str:name>/update/', CommunityUpdateView.as_view(), name='community-update'),
+    path('community/<str:community_name>/update/', CommunityUpdateView.as_view(), name='community-update'),
 
 ]

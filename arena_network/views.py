@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
 from arena_auth.models import CustomUser
+from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from .models import Community, CommunityMember
 from .serializers import CommunitySerializer
 
@@ -43,7 +44,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
                 [user.email],
                 fail_silently=False,
             )
-        except community_member:
+        except community_member.DoesNotExist:
             return Response({"error": "You do not have permission to delete this community."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -140,11 +141,12 @@ class RemoveMemberView(APIView):
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
 
 
-class CommunityUpdateAPIView(generics.UpdateAPIView):
+class CommunityUpdateView(generics.UpdateAPIView):
     queryset = Community.objects.all()
     serializer_class = None  # Definito nel get_serializer_class
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'name'
+    lookup_url_kwarg = 'community_name'
     http_method_names = ['patch']  # Solo PATCH è consentito
 
     def get_serializer_class(self):
@@ -160,10 +162,14 @@ class CommunityUpdateAPIView(generics.UpdateAPIView):
                     value_lower = value.lower()
                     for word in PROHIBITED_WORDS_IT:
                         if word.lower() in value_lower:
-                            raise ValidationError(f"La bio contiene una parola proibita: {word}")
+                            return Response(
+                                {"error": "La bio contiene una parola proibita."},
+                                status=status.HTTP_403_FORBIDDEN)
                     for word in PROHIBITED_WORDS_EN:
                         if word.lower() in value_lower:
-                            raise ValidationError(f"La bio contiene una parola proibita: {word}")
+                            return Response(
+                                {"error": "La bio contiene una parola proibita."},
+                                status=status.HTTP_403_FORBIDDEN)
                 return value
         return CommunityUpdateSerializer
 
