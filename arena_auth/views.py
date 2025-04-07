@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
@@ -59,11 +60,11 @@ class CustomTokenObtainPairView(APIView):
 
 
 class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def delete(self, request):
+    def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
