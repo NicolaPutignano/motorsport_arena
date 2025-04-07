@@ -41,7 +41,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
                 [user.email],
                 fail_silently=False,
             )
-        except community_member:
+        except CommunityMember.DoesNotExist:
             return Response({"error": "You do not have permission to delete this community."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -136,3 +136,16 @@ class RemoveMemberView(APIView):
         community_member.save()
 
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
+
+
+class CommunityRetrieveView(generics.RetrieveAPIView):
+    queryset = Community.objects.all()
+    serializer_class = CommunitySerializer
+    lookup_field = 'name'
+    lookup_url_kwarg = 'community_name'
+
+
+class CommunityListView(generics.ListAPIView):
+    queryset = Community.objects.all()
+    serializer_class = CommunitySerializer
+
