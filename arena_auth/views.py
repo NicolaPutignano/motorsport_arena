@@ -77,7 +77,6 @@ class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
             response.delete_cookie('refresh_token')
             response.delete_cookie('access_token')
             return response
-
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
