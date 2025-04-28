@@ -10,7 +10,8 @@ class CommunitySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'bio', 'avatar', 'created_at', 'created_by']
         read_only_fields = ['id', 'created_at', 'created_by']
 
-    def validate_name(self, value):
+    @staticmethod
+    def validate_name(value):
         if Community.objects.filter(name=value).exists():
             raise serializers.ValidationError("Una community con questo nome esiste già.")
 

@@ -25,7 +25,7 @@ class CustomTokenObtainPairView(APIView):
     permission_classes = ()
     authentication_classes = ()
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(username=username, password=password)
@@ -58,25 +58,27 @@ class CustomTokenObtainPairView(APIView):
             return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class LogoutAndBlacklistRefreshTokenForUserView(APIView):
+class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
 
-        refresh_token = serializer.validated_data['refresh_token']
+        if not refresh_token:
+            return Response({"error": "Refresh token non trovato nei cookie."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
+
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
             response.delete_cookie('access_token')
             return response
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Enable2FAView(APIView):
@@ -105,13 +107,12 @@ class Verify2FAView(APIView):
 class DeleteAccountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request):
         user = request.user
         email = user.email
         username = user.username
         user.delete()
 
-        # Invia un'email di conferma
         send_mail(
             'Conferma di Cancellazione dell\'Account',
             f'Ciao {username},\n\nIl tuo account è stato cancellato con successo.',

@@ -73,19 +73,22 @@ class EventSerializer(serializers.ModelSerializer):
         fields = ['name', 'event_type', 'multiclass', 'multiclass_group_name1', 'multiclass_group_name2', 'public',
                   'ranked', 'document', 'poster', 'races']
 
-    def validate_name(self, value):
+    @staticmethod
+    def validate_name(value):
         if Event.objects.filter(name=value).exists():
             raise serializers.ValidationError("An event with this name already exists.")
         if contains_prohibited_words(value, PROHIBITED_WORDS_EN) or contains_prohibited_words(value, PROHIBITED_WORDS_IT):
             raise serializers.ValidationError("The event name contains prohibited words.")
         return value
 
-    def validate_document(self, value):
+    @staticmethod
+    def validate_document(value):
         if value and not value.name.lower().endswith(('.pdf', '.doc', '.docx', '.txt')):
             raise serializers.ValidationError("Only text files are allowed.")
         return value
 
-    def validate_poster(self, value):
+    @staticmethod
+    def validate_poster(value):
         if value and not value.name.lower().endswith(('.jpeg', '.jpg', '.png')):
             raise serializers.ValidationError("Only image files are allowed.")
         return value

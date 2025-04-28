@@ -23,13 +23,15 @@ class CommunityCreateView(generics.CreateAPIView):
 
 class CommunityDeleteView(generics.DestroyAPIView):
     queryset = Community.objects.all()
+    lookup_field = "name"
     serializer_class = CommunitySerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
     def delete(self, request, *args, **kwargs):
-        community = self.get_object()
         user = request.user
+        community = Community.objects.get(name=self.kwargs.get("community_name"))
+        community_member = None
         try:
             community_member = CommunityMember.objects.get(user=user, community=community, role='Admin')
             send_mail(
@@ -39,18 +41,19 @@ class CommunityDeleteView(generics.DestroyAPIView):
                 [user.email],
                 fail_silently=False,
             )
-        except CommunityMember.DoesNotExist:
+        except community_member:
             return Response({"error": "You do not have permission to delete this community."},
                             status=status.HTTP_403_FORBIDDEN)
 
-        return super().delete(request, *args, **kwargs)
+        self.perform_destroy(community)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class JoinCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, **kwargs):
         community_name = kwargs.get('community_name')
         try:
             community = Community.objects.get(name=community_name)
@@ -133,4 +136,3 @@ class RemoveMemberView(APIView):
         community_member.save()
 
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
-
