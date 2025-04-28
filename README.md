@@ -41,7 +41,7 @@ Nella root del progetto, crea un file chiamato `.env` con le seguenti variabili 
 ### DataBase
 - DB_NAME=MOTORSPORTARENA
 - DB_USER=postgres
-- DB_PASSWORD=your_email_password
+- DB_PASSWORD=your_database_password
 - DB_HOST=localhost
 - DB_PORT=5432
 - SECRET_KEY=your_secret_key
