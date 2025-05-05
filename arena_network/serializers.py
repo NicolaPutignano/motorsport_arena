@@ -1,12 +1,17 @@
 from rest_framework import serializers, status
 from rest_framework.response import Response
-
+from django.contrib.auth import get_user_model
+from arena_auth.models import Nationality, UserAttr
 from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from .models import Community
 from .utils import contains_prohibited_words
 
+User = get_user_model()
+
+
 
 class CommunitySerializer(serializers.ModelSerializer):
+    created_by = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Community
         fields = ['id', 'name', 'bio', 'avatar', 'created_at', 'created_by']
@@ -40,3 +45,4 @@ class CommunityUpdateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("La bio contiene una parola proibita.")
 
         return value
+

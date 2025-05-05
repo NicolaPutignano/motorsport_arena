@@ -3,10 +3,15 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
 from arena_network.constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
+from arena_network.models import Community, CommunityMember
+from arena_network.serializers import CommunitySerializer
 from arena_network.utils import contains_prohibited_words
-from .models import CustomUser, UserAttr
+from .models import CustomUser, UserAttr, Nationality
+
+User = get_user_model()
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -117,3 +122,51 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
+
+
+class NationalitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nationality
+        fields = ['id', 'name', 'code']
+
+
+class UserAttrSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAttr
+        fields = [
+            'bio',
+            'role',
+            'avatar',
+            'xbox_id',
+            'nationality',  # Questo mostrerà l'ID della nazionalità di default
+            'platform',
+            'device',
+            'forza_rating',
+            'forza_safety_rating',
+            'youtube_url',
+            'twitch_url',
+        ]
+
+
+class CommunityMemberSerializer(serializers.ModelSerializer):
+    community = CommunitySerializer(read_only=True)
+
+    class Meta:
+        model = CommunityMember
+        fields = ['id', 'community', ]
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    userattr = UserAttrSerializer(read_only=True)
+    communities_created = CommunitySerializer(many=True, read_only=True)
+
+    member_of_communities = CommunityMemberSerializer(many=True, read_only=True, source='communitymember_set')
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'date_joined',
+            'userattr',
+            'communities_created',
+            'member_of_communities',
+        ]

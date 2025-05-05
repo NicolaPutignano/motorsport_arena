@@ -10,8 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from .authentication import CookieJWTAuthentication
-from .serializers import CustomUserSerializer, LogoutSerializer
-
+from .serializers import CustomUserSerializer, LogoutSerializer, UserProfileSerializer
 
 User = get_user_model()
 
@@ -124,3 +123,22 @@ class DeleteAccountView(APIView):
 
         return Response({"detail": "Account cancellato con successo. Una email di conferma è stata inviata."},
                         status=status.HTTP_200_OK)
+
+
+class CurrentUserView(generics.GenericAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+
+
+class UserProfileView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.AllowAny]
+
+    lookup_field = 'username'
+    lookup_url_kwarg = 'username'

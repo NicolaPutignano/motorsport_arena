@@ -5,7 +5,6 @@ from arena_network.constants import COMMUNITY_ROLE_CHOICES
 
 
 class Community(models.Model):
-    objects = None
     name = models.CharField(max_length=255, unique=True)
     bio = models.TextField(blank=True, null=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)

@@ -11,7 +11,6 @@ from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from .models import Community, CommunityMember
 from .serializers import CommunitySerializer, CommunityUpdateSerializer
 
-
 class CommunityCreateView(generics.CreateAPIView):
     queryset = Community.objects.all()
     serializer_class = CommunitySerializer
@@ -164,3 +163,4 @@ class CommunityUpdateView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
+
