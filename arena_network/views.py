@@ -9,7 +9,7 @@ from arena_auth.authentication import CookieJWTAuthentication
 from arena_auth.models import CustomUser
 from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from .models import Community, CommunityMember
-from .serializers import CommunitySerializer
+from .serializers import CommunitySerializer, CommunityUpdateSerializer
 
 
 class CommunityCreateView(generics.CreateAPIView):
@@ -143,37 +143,24 @@ class RemoveMemberView(APIView):
 
 class CommunityUpdateView(generics.UpdateAPIView):
     queryset = Community.objects.all()
-    serializer_class = None  # Definito nel get_serializer_class
+    serializer_class = CommunityUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'name'
     lookup_url_kwarg = 'community_name'
-    http_method_names = ['patch']  # Solo PATCH è consentito
-
-    def get_serializer_class(self):
-        from rest_framework import serializers
-
-        class CommunityUpdateSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Community
-                fields = ['bio', 'avatar']
-
-            def validate_bio(self, value):
-                if value:
-                    value_lower = value.lower()
-                    for word in PROHIBITED_WORDS_IT:
-                        if word.lower() in value_lower:
-                            return Response(
-                                {"error": "La bio contiene una parola proibita."},
-                                status=status.HTTP_403_FORBIDDEN)
-                    for word in PROHIBITED_WORDS_EN:
-                        if word.lower() in value_lower:
-                            return Response(
-                                {"error": "La bio contiene una parola proibita."},
-                                status=status.HTTP_403_FORBIDDEN)
-                return value
-        return CommunityUpdateSerializer
+    http_method_names = ['post']
 
     def check_object_permissions(self, request, obj):
         if obj.created_by != request.user:
             self.permission_denied(request, message="Solo il creatore può modificare questa community.")
         super().check_object_permissions(request, obj)
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
