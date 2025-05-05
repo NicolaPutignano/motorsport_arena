@@ -64,13 +64,16 @@ class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if not refresh_token:
+            return Response({"error": "Refresh token non trovato nei cookie."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            token = RefreshToken(serializer.validated_data['refresh_token'])
+            token = RefreshToken(refresh_token)
             token.blacklist()
+
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
             response.delete_cookie('access_token')
