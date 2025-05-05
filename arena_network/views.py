@@ -160,7 +160,7 @@ class CommunityUpdateView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        return Response(serializer.data)
+        return Response({"success": "Hai aggiornato correttamente i dati della community."}, status=status.HTTP_200_OK)
 
     def perform_update(self, serializer):
         serializer.save()
