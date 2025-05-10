@@ -1,12 +1,15 @@
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.mail import send_mail
+from django.views.generic import UpdateView
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
 from arena_auth.models import CustomUser
+from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
 from .models import Community, CommunityMember
-from .serializers import CommunitySerializer
+from .serializers import CommunitySerializer, CommunityUpdateSerializer
 
 
 class CommunityCreateView(generics.CreateAPIView):
@@ -41,7 +44,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
                 [user.email],
                 fail_silently=False,
             )
-        except community_member:
+        except community_member.DoesNotExist:
             return Response({"error": "You do not have permission to delete this community."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -136,3 +139,28 @@ class RemoveMemberView(APIView):
         community_member.save()
 
         return Response({"success": "Member has been removed from the community."}, status=status.HTTP_200_OK)
+
+
+class CommunityUpdateView(generics.UpdateAPIView):
+    queryset = Community.objects.all()
+    serializer_class = CommunityUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'name'
+    lookup_url_kwarg = 'community_name'
+    http_method_names = ['post']
+
+    def check_object_permissions(self, request, obj):
+        if obj.created_by != request.user:
+            self.permission_denied(request, message="Solo il creatore può modificare questa community.")
+        super().check_object_permissions(request, obj)
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({"success": "Hai aggiornato correttamente i dati della community."}, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        serializer.save()

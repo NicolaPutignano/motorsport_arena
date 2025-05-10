@@ -66,7 +66,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return value
 
     @staticmethod
-    def validate_xbox_id(self, value):
+    def validate_xbox_id(value):
         if not re.match(r'^[a-zA-Z][a-zA-Z0-9#]{2,19}$', value):
             raise serializers.ValidationError(
                 "Xbox ID non valido. Deve essere lungo 3-20 caratteri,"
