@@ -9,9 +9,9 @@ from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.conf import settings
 
+from utils.decorators import require_role
 from .authentication import CookieJWTAuthentication
 from .serializers import CustomUserSerializer, LogoutSerializer
-
 
 User = get_user_model()
 
@@ -59,12 +59,13 @@ class CustomTokenObtainPairView(APIView):
             return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
+class LogoutAndBlacklistRefreshTokenForUserView(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = LogoutSerializer
 
-    def post(self, request, *args, **kwargs):
+    @require_role("MEMBER")
+    def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
 
         if not refresh_token:
@@ -77,7 +78,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie('refresh_token')
             response.delete_cookie('access_token')
-            return response
+            return Response({"detail": "Logout avvenuto con successo"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -85,6 +86,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(generics.CreateAPIView):
 class Enable2FAView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @require_role("MEMBER")
     def post(self, request):
         user = request.user
         device, created = TOTPDevice.objects.get_or_create(user=user, name='default')
@@ -96,6 +98,7 @@ class Enable2FAView(APIView):
 class Verify2FAView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @require_role("MEMBER")
     def post(self, request):
         user = request.user
         token = request.data.get('token')
@@ -108,6 +111,7 @@ class Verify2FAView(APIView):
 class DeleteAccountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @require_role("MEMBER")
     def delete(self, request):
         user = request.user
         email = user.email

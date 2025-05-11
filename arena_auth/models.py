@@ -52,5 +52,12 @@ class CustomUser(AbstractUser):
         related_query_name='customuser',
     )
 
+    @property
+    def role(self):
+        try:
+            return self.userattr.role
+        except UserAttr.DoesNotExist:
+            return None
+
     def __str__(self):
         return self.username

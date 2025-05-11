@@ -12,7 +12,8 @@ class Devices(models.TextChoices):
 
 
 class UserRole(models.TextChoices):
-    MANAGER = 'Manager'
-    SUPERVISOR = 'Supervisor'
-    CREATOR = 'Creator'
-    MEMBER = 'Member'
+    MANAGER = 'MANAGER'
+    SUPERVISOR = 'SUPERVISOR'
+    CREATOR = 'CREATOR'
+    MEMBER = 'MEMBER'
+    ADMIN = 'ADMIN'

@@ -1,13 +1,11 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.mail import send_mail
-from django.views.generic import UpdateView
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
 from arena_auth.models import CustomUser
-from .constants import PROHIBITED_WORDS_EN, PROHIBITED_WORDS_IT
+from utils.decorators import require_role
 from .models import Community, CommunityMember
 from .serializers import CommunitySerializer, CommunityUpdateSerializer
 
@@ -18,10 +16,13 @@ class CommunityCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         community = serializer.save(created_by=self.request.user)
         CommunityMember.objects.create(user=self.request.user, community=community, role='Admin')
-        return Response(serializer.data)
 
 
 class CommunityDeleteView(generics.DestroyAPIView):
@@ -31,6 +32,7 @@ class CommunityDeleteView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
     def delete(self, request, *args, **kwargs):
         user = request.user
         community = Community.objects.get(name=self.kwargs.get("community_name"))
@@ -56,6 +58,7 @@ class JoinCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
     def post(self, request, **kwargs):
         community_name = kwargs.get('community_name')
         try:
@@ -85,6 +88,7 @@ class LeaveCommunityView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
     def post(self, request, *args, **kwargs):
         community_name = kwargs.get('community_name')
         try:
@@ -108,6 +112,7 @@ class RemoveMemberView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
     def post(self, request, *args, **kwargs):
         community_name = kwargs.get('community_name')
         username = kwargs.get('username')
@@ -154,6 +159,7 @@ class CommunityUpdateView(generics.UpdateAPIView):
             self.permission_denied(request, message="Solo il creatore può modificare questa community.")
         super().check_object_permissions(request, obj)
 
+    @require_role("MEMBER")
     def post(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)

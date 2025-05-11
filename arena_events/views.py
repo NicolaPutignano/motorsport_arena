@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from arena_auth.authentication import CookieJWTAuthentication
+from utils.decorators import require_role
 from .models import Event, EventMember
 from .serializers import EventSerializer, EventDetailSerializer, EventUpdateSerializer
 
@@ -19,6 +20,7 @@ class EventCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("SUPERVISOR")
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
 
@@ -46,6 +48,7 @@ class JoinEventView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    @require_role("MEMBER")
     def post(self, request, **kwargs):
         event_name = kwargs.get('event_name')
         try:
@@ -76,6 +79,7 @@ class EventDetailView(generics.RetrieveAPIView):
     lookup_field = 'name'
     lookup_url_kwarg = 'event_name'
 
+    @require_role("MEMBER")
     def get(self, request, *args, **kwargs):
         event_name = self.kwargs.get(self.lookup_url_kwarg)
         try:
@@ -97,6 +101,7 @@ class EventDetailView(generics.RetrieveAPIView):
 
 class EventUpdateView(views.APIView):
 
+    @require_role("SUPERVISOR")
     def patch(self, request, **kwargs):
         event_name = kwargs.get('event_name')
         event = Event.objects.get(name=event_name)
